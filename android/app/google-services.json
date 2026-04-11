@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "294602659204",
+    "project_id": "fir-postman-fe350",
+    "storage_bucket": "fir-postman-fe350.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294602659204:android:b3d819ec31d70bed67f9d1",
+        "android_client_info": {
+          "package_name": "com.example.testing_produk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "294602659204-d09jv0qdtknd8kne4dnu6iag4ck4cv5c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJE_RDmkdmBptZhHH6DDJm5iSnQomxrQY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "294602659204-d09jv0qdtknd8kne4dnu6iag4ck4cv5c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294602659204:android:1ab000887dd3338267f9d1",
+        "android_client_info": {
+          "package_name": "com.firebase.postman"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "294602659204-d09jv0qdtknd8kne4dnu6iag4ck4cv5c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJE_RDmkdmBptZhHH6DDJm5iSnQomxrQY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "294602659204-d09jv0qdtknd8kne4dnu6iag4ck4cv5c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
