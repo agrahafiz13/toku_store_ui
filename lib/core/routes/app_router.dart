@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toku_store/core/constants/api_colors.dart';
+import 'package:toku_store/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:toku_store/main.dart';
-import 'package:toku_store/features/auth/presentation/pages/dashboard_page.dart';
 import 'package:toku_store/features/auth/presentation/pages/login_page.dart';
 import 'package:toku_store/features/auth/presentation/pages/register_page.dart';
 import 'package:toku_store/features/auth/presentation/pages/verify_email_page.dart';
