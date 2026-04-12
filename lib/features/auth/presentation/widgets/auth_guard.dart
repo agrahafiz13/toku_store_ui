@@ -15,15 +15,9 @@ class AuthGuard extends StatelessWidget {
     final status = context.watch<AuthProvider>().status;
 
     return switch (status) {
-      AuthStatus.authenticated => child, // Lanjut
-      AuthStatus.emailNotVerified => const VerifyEmailPage(), // Redirect
-      _ => const LoginPage(), // Redirect login
+      AuthStatus.authenticated => child,
+      AuthStatus.emailNotVerified => const VerifyEmailPage(),
+      _ => const LoginPage(),
     };
   }
 }
-
-// Penggunaan di routes:
-dashboard: (_) => const AuthGuard(child: DashboardPage()),
-//                        ↑
-//              Hanya masuk jika status = authenticated
-

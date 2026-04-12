@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:toku_store/core/constants/api_colors.dart';
+import 'package:provider/provider.dart';
+import 'package:toku_store/features/auth/presentation/providers/auth_provider.dart';
 import 'package:toku_store/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:toku_store/main.dart';
 import 'package:toku_store/features/auth/presentation/pages/login_page.dart';
 import 'package:toku_store/features/auth/presentation/pages/register_page.dart';
 import 'package:toku_store/features/auth/presentation/pages/verify_email_page.dart';
-import 'package:toku_store/features/splash/presentation/pages/splash_page.dart';
 
 class AppRouter {
   static const String splash = '/';
@@ -21,4 +21,21 @@ class AppRouter {
     verifyEmail: (_) => const VerifyEmailPage(),
     dashboard: (_) => const AuthGuard(child: DashboardPage()),
   };
+}
+
+class AuthGuard extends StatelessWidget {
+  final Widget child;
+  const AuthGuard({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final status = context.watch<AuthProvider>().status;
+
+    return switch (status) {
+      AuthStatus.authenticated => child, // Lanjut ke halaman
+      AuthStatus.emailNotVerified =>
+        const VerifyEmailPage(), // Redirect verifikasi
+      _ => const LoginPage(), // Redirect login
+    };
+  }
 }
