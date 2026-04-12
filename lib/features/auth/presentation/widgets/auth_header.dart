@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class AuthHeader extends StatelessWidget {
   final IconData icon;
   final String title;

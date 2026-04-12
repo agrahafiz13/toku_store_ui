@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum ButtonVariant { primary, outlined, text }
 
 class CustomButton extends StatelessWidget {
