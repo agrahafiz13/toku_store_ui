@@ -1,6 +1,6 @@
 import 'package:toku_store/core/constants/api_constants.dart';
 import 'package:toku_store/core/services/dio_client.dart';
-import 'package:toku_store/features/dashboard/domain/repositories/auth_repository.dart';
+import 'package:toku_store/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   @override
