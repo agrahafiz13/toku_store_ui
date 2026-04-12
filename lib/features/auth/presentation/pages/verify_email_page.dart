@@ -4,7 +4,7 @@ import 'package:toku_store/features/auth/presentation/providers/auth_provider.da
 import 'package:toku_store/features/auth/presentation/widgets/auth_header.dart';
 import 'package:toku_store/features/auth/presentation/widgets/custom_button.dart';
 import 'dart:async';
-import 'package:toku_store/core/router/app_router.dart';
+import 'package:toku_store/core/routes/app_router.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({super.key});
