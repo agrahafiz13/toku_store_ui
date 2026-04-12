@@ -1,6 +1,6 @@
 {
-    "name": "testing_produk",
-    "short_name": "testing_produk",
+    "name": "toku_store",
+    "short_name": "toku_store",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

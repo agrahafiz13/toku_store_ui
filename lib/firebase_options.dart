@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBJE_RDmkdmBptZhHH6DDJm5iSnQomxrQY',
-    appId: '1:294602659204:android:b3d819ec31d70bed67f9d1',
+    appId: '1:294602659204:android:e39a8b297f13c92267f9d1',
     messagingSenderId: '294602659204',
     projectId: 'fir-postman-fe350',
     storageBucket: 'fir-postman-fe350.firebasestorage.app',
@@ -66,11 +66,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyD4YFFeAOc1wbj6WkpIkCd1xBVEb38AgVw',
-    appId: '1:294602659204:web:de518e6fb4c1ad0b67f9d1',
+    appId: '1:294602659204:web:3db5b802a92fc0b367f9d1',
     messagingSenderId: '294602659204',
     projectId: 'fir-postman-fe350',
     authDomain: 'fir-postman-fe350.firebaseapp.com',
     storageBucket: 'fir-postman-fe350.firebasestorage.app',
-    measurementId: 'G-JQ9DRZ9DGT',
+    measurementId: 'G-1V2F1WTN9R',
   );
 }
