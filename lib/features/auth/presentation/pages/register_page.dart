@@ -6,8 +6,7 @@ import 'package:toku_store/features/auth/presentation/widgets/custom_button.dart
 import 'package:toku_store/features/auth/presentation/widgets/custom_text_field.dart';
 import 'package:toku_store/features/auth/presentation/widgets/loading_overlay.dart';
 import 'package:toku_store/features/auth/presentation/providers/auth_provider.dart';
-import 'package:toku_store/core/routes/app_router.dart';
-
+import 'package:toku_store/core/router/app_router.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -26,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _emailCtrl.dispose();``
+    _emailCtrl.dispose();
     _passCtrl.dispose();
     _pass2Ctrl.dispose();
     super.dispose();
@@ -163,7 +162,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                     ],
-                    
                   ),
                 ],
               ),

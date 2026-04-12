@@ -2,7 +2,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:toku_store/core/routes/app_router.dart';
+import 'package:toku_store/core/router/app_router.dart';
 import 'package:toku_store/features/auth/presentation/widgets/auth_header.dart';
 import 'package:toku_store/features/auth/presentation/widgets/custom_button.dart';
 import 'package:toku_store/features/auth/presentation/widgets/google_sign_in_button.dart';
