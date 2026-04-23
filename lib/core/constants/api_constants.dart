@@ -7,7 +7,7 @@ class ApiConstants {
   // Product endpoints
   static const String products = '/products';
 
-  // Timeout
+  // Timeoutf
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
 }
