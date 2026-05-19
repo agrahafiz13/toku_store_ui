@@ -464,48 +464,124 @@ class _DashboardPageState extends State<DashboardPage> {
 
                                   const SizedBox(height: 10),
 
-                                  SizedBox(
-                                    width: double.infinity,
+                                  Builder(
+                                    builder: (_) {
+                                      final cartItem = cart.getItemByProductId(
+                                        p.id,
+                                      );
 
-                                    child: ElevatedButton.icon(
-                                      onPressed: cart.isAdding
-                                          ? null
-                                          : () async {
-                                              final success = await cart
-                                                  .addToCart(p.id, 1);
+                                      // ================= BELUM ADA DI CART =================
+                                      if (cartItem == null) {
+                                        return SizedBox(
+                                          width: double.infinity,
 
-                                              if (!mounted) return;
+                                          child: ElevatedButton.icon(
+                                            onPressed: cart.isAdding
+                                                ? null
+                                                : () async {
+                                                    final success = await cart
+                                                        .addToCart(p.id, 1);
 
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    success
-                                                        ? 'Berhasil ditambahkan ke keranjang'
-                                                        : 'Gagal menambahkan ke keranjang',
+                                                    if (!mounted) return;
+
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          success
+                                                              ? 'Berhasil ditambahkan ke keranjang'
+                                                              : 'Gagal menambahkan ke keranjang',
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+
+                                            icon: cart.isAdding
+                                                ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.add_shopping_cart,
                                                   ),
-                                                ),
-                                              );
-                                            },
 
-                                      icon: cart.isAdding
-                                          ? const SizedBox(
-                                              width: 16,
-                                              height: 16,
+                                            label: Text(
+                                              cart.isAdding
+                                                  ? 'Loading...'
+                                                  : 'Keranjang',
+                                            ),
+                                          ),
+                                        );
+                                      }
 
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
+                                      // ================= SUDAH ADA DI CART =================
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 2,
+                                        ),
+
+                                        decoration: BoxDecoration(
+                                          color: color.primary.withOpacity(0.1),
+
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+
+                                          children: [
+                                            // MINUS
+                                            IconButton(
+                                              icon: const Icon(Icons.remove),
+
+                                              onPressed: () async {
+                                                if (cartItem.quantity > 1) {
+                                                  await cart.updateItem(
+                                                    cartItem.id,
+                                                    cartItem.quantity - 1,
+                                                  );
+                                                } else {
+                                                  await cart.removeItem(
+                                                    cartItem.id,
+                                                  );
+                                                }
+                                              },
+                                            ),
+
+                                            // QTY
+                                            Text(
+                                              '${cartItem.quantity}',
+
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
                                               ),
-                                            )
-                                          : const Icon(Icons.add_shopping_cart),
+                                            ),
 
-                                      label: Text(
-                                        cart.isAdding
-                                            ? 'Loading...'
-                                            : 'Keranjang',
-                                      ),
-                                    ),
+                                            // PLUS
+                                            IconButton(
+                                              icon: const Icon(Icons.add),
+
+                                              onPressed: () async {
+                                                await cart.updateItem(
+                                                  cartItem.id,
+                                                  cartItem.quantity + 1,
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),

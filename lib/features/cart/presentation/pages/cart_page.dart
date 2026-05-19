@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:toku_store/core/routes/app_router.dart';
 import 'package:toku_store/features/cart/data/models/cart_model.dart';
 import 'package:toku_store/features/cart/presentation/providers/cart_provider.dart';
 import 'package:provider/provider.dart';
