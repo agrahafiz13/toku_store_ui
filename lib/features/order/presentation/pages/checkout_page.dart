@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toku_store/core/routes/app_router.dart';
 
 import 'package:toku_store/features/cart/presentation/providers/cart_provider.dart';
-import 'package:toku_store/features/order/presentation/pages/order_success.dart';
 import 'package:toku_store/features/order/presentation/providers/order_provider.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -13,172 +13,432 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  final _addressController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _addressCtrl = TextEditingController();
+  final _notesCtrl = TextEditingController();
+  String? _selectedPaymentMethod;
 
-  final _notesController = TextEditingController();
-
-  String _paymentMethod = 'cash';
-
-  final List<String> _paymentMethods = ['cash', 'gopay', 'bank_transfer'];
+  static const List<_PaymentOption> _paymentOptions = [
+    _PaymentOption(
+      value: 'gopay',
+      label: 'GoPay',
+      subtitle: 'Bayar instant dengan GoPay',
+      icon: Icons.account_balance_wallet,
+      iconColor: Color(0xFF00ADB5),
+    ),
+    _PaymentOption(
+      value: 'bank_transfer',
+      label: 'Transfer Bank',
+      subtitle: 'BCA, Mandiri, BNI, BRI',
+      icon: Icons.account_balance,
+      iconColor: Color(0xFF1565C0),
+    ),
+    _PaymentOption(
+      value: 'virtual_account',
+      label: 'Virtual Account',
+      subtitle: 'Nomor VA otomatis digenerate',
+      icon: Icons.credit_card,
+      iconColor: Color(0xFFE65100),
+    ),
+  ];
 
   @override
   void dispose() {
-    _addressController.dispose();
-    _notesController.dispose();
+    _addressCtrl.dispose();
+    _notesCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _handleCheckout() async {
-    final orderProvider = context.read<OrderProvider>();
+  String _formatPrice(double price) {
+    final str = price.toInt().toString();
+    final buffer = StringBuffer();
+    int count = 0;
+    for (int i = str.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) buffer.write('.');
+      buffer.write(str[i]);
+      count++;
+    }
+    return 'Rp. ${buffer.toString().split('').reversed.join()}';
+  }
 
-    final cartProvider = context.read<CartProvider>();
-
-    if (_addressController.text.trim().isEmpty) {
+  Future<void> _placeOrder(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Alamat pengiriman wajib diisi')),
+        const SnackBar(
+          content: Text('Pilih metode pembayaran terlebih dahulu'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
 
-    final success = await orderProvider.checkout(
-      shippingAddress: _addressController.text,
+    final orderProv = context.read<OrderProvider>();
+    final cartProv = context.read<CartProvider>();
 
-      notes: _notesController.text,
-
-      paymentMethod: _paymentMethod,
+    // Show loading overlay
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    if (!mounted) return;
+    final success = await orderProv.checkout(
+      shippingAddress: _addressCtrl.text.trim(),
+      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      paymentMethod: _selectedPaymentMethod!,
+    );
+
+    if (!context.mounted) return;
+    Navigator.pop(context); // dismiss loading
 
     if (success) {
       // refresh cart biar badge kosong
-      await cartProvider.fetchCart();
+      await cartProv.fetchCart();
+      if (!context.mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OrderSuccessPage()),
-      );
+      final order = orderProv.lastOrder!;
+
+      Navigator.pushNamed(context, AppRouter.orderSuccess, arguments: order);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(orderProvider.error ?? 'Checkout gagal')),
+        SnackBar(
+          content: Text(orderProv.error ?? 'Gagal membuat pesanan'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final color = theme.colorScheme;
-
-    final cart = context.watch<CartProvider>();
-
-    final order = context.watch<OrderProvider>();
+    final cartProv = context.watch<CartProvider>();
+    final cart = cartProv.cart;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final surface = Theme.of(context).colorScheme.surface;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
-
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-            // ================= TOTAL =================
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── 1. Ringkasan Pesanan ───────────────────────
+              const _SectionTitle(title: 'Ringkasan Pesanan'),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
                   children: [
-                    const Text('Total Belanja'),
-
-                    Text(
-                      'Rp ${cart.cart?.total.toStringAsFixed(0) ?? '0'}',
-                      style: TextStyle(
-                        color: color.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                    if (cart != null) ...[
+                      ...cart.items.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.product.name,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${item.quantity} x ${_formatPrice(item.product.price)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                _formatPrice(item.subtotal),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                    ],
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _formatPrice(cart?.total ?? 0),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-            // ================= ADDRESS =================
-            TextField(
-              controller: _addressController,
-
-              maxLines: 3,
-
-              decoration: const InputDecoration(
-                labelText: 'Alamat Pengiriman',
-                border: OutlineInputBorder(),
+              // ── 2. Alamat Pengiriman ───────────────────────
+              const _SectionTitle(title: 'Alamat Pengiriman'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _addressCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Masukkan alamat lengkap pengiriman...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: surface,
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return 'Alamat pengiriman wajib diisi';
+                  }
+                  return null;
+                },
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-            // ================= NOTES =================
-            TextField(
-              controller: _notesController,
-
-              maxLines: 2,
-
-              decoration: const InputDecoration(
-                labelText: 'Catatan (opsional)',
-                border: OutlineInputBorder(),
+              // ── 3. Catatan ─────────────────────────────────
+              const _SectionTitle(title: 'Catatan (opsional)'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _notesCtrl,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'Tambahkan catatan untuk penjual...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: surface,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-            // ================= PAYMENT =================
-            DropdownButtonFormField<String>(
-              value: _paymentMethod,
-
-              items: _paymentMethods
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-
-              onChanged: (value) {
-                setState(() {
-                  _paymentMethod = value!;
-                });
-              },
-
-              decoration: const InputDecoration(
-                labelText: 'Metode Pembayaran',
-                border: OutlineInputBorder(),
+              // ── 4. Metode Pembayaran ───────────────────────
+              const _SectionTitle(title: 'Metode Pembayaran'),
+              const SizedBox(height: 8),
+              ..._paymentOptions.map(
+                (option) => _PaymentOptionCard(
+                  option: option,
+                  isSelected: _selectedPaymentMethod == option.value,
+                  onSelect: () =>
+                      setState(() => _selectedPaymentMethod = option.value),
+                ),
               ),
-            ),
 
-            const Spacer(),
+              const SizedBox(height: 32),
 
-            // ================= CHECKOUT BUTTON =================
-            SizedBox(
-              width: double.infinity,
-
-              child: ElevatedButton(
-                onPressed: order.checkoutStatus == OrderStatus.loading
-                    ? null
-                    : _handleCheckout,
-
-                child: order.checkoutStatus == OrderStatus.loading
-                    ? const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: CircularProgressIndicator(),
-                      )
-                    : const Text('Checkout Sekarang'),
+              // ── 5. Tombol Place Order ──────────────────────
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _placeOrder(context),
+                  child: const Text(
+                    'Place Order',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Section Title ──────────────────────────────────────────
+class _SectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+// ── Payment Option Model ───────────────────────────────────
+class _PaymentOption {
+  final String value;
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+
+  const _PaymentOption({
+    required this.value,
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+  });
+}
+
+// ── Payment Option Card ────────────────────────────────────
+class _PaymentOptionCard extends StatelessWidget {
+  final _PaymentOption option;
+  final bool isSelected;
+  final VoidCallback onSelect;
+
+  const _PaymentOptionCard({
+    required this.option,
+    required this.isSelected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = Theme.of(context).colorScheme.surface;
+    final primary = Theme.of(context).colorScheme.primary;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return GestureDetector(
+      onTap: onSelect,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? primary : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: option.iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(option.icon, color: option.iconColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      option.label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: onSurface,
+                      ),
+                    ),
+                    Text(
+                      option.subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected
+                        ? primary
+                        : onSurface.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: primary,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );

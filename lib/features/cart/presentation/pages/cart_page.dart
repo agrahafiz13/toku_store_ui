@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toku_store/features/cart/data/models/cart_model.dart';
 import 'package:toku_store/features/cart/presentation/providers/cart_provider.dart';
+import 'package:toku_store/features/order/presentation/pages/checkout_page.dart';
 import 'package:provider/provider.dart';
 
 class CartPage extends StatefulWidget {
@@ -144,7 +145,12 @@ class _CartPageState extends State<CartPage> {
               _CartBottomBar(
                 total: cart.total,
                 formatPrice: _formatPrice,
-                onCheckout: () {},
+                onCheckout: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CheckoutPage()),
+                  );
+                },
               ),
             ],
           );
