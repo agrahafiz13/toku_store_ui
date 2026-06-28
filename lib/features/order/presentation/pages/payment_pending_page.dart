@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:toku_store/core/routes/app_router.dart';
+import 'package:toku_store/core/services/dio_client.dart';
 import 'package:toku_store/core/services/dompet_pay_service.dart';
 import 'package:toku_store/features/order/data/models/order_model.dart';
 import 'package:toku_store/features/order/presentation/providers/order_provider.dart';
@@ -23,6 +23,7 @@ class PaymentPendingPage extends StatefulWidget {
 class _PaymentPendingPageState extends State<PaymentPendingPage>
  with WidgetsBindingObserver {
  bool _payLaunched = false;
+ bool _isNavigatingToSuccess = false;
  StreamSubscription<PaymentCallbackData>? _callbackSub;
 
  @override
@@ -102,16 +103,12 @@ class _PaymentPendingPageState extends State<PaymentPendingPage>
     if (state == AppLifecycleState.resumed && _payLaunched) {
       _log(' Resumed setelah launch → tembak webhook & cek status (orderId=${widget.order.id})');
 
-      // JALUR CEPAT UTS: Aplikasi Flutter E-Commerce langsung melunasi pesanannya sendiri
-      final url = Uri.parse('http://10.59.206.59:8082/v1/orders/${widget.order.id}/pay');
-      
-      HttpClient().postUrl(url).then((request) async {
-        await request.close(); // Eksekusi tembakan API POST ke backend
-        _log(' Status sukses di-update ke Backend Toku Store!');
+      final endpoint = '/orders/${widget.order.id}/pay';
+      DioClient.instance.post(endpoint).then((response) {
+        _log(' Status sukses di-update ke Backend Toku Store! URL=${response.requestOptions.baseUrl}${response.requestOptions.path}');
       }).catchError((e) {
         _log(' Gagal update status manual: $e');
       }).whenComplete(() {
-        // Setelah ditembak, panggil provider untuk mengambil status terbaru agar layar pindah ke Success
         if (mounted) {
           context.read<OrderProvider>().checkPaymentStatus(widget.order.id);
         }
@@ -184,15 +181,39 @@ class _PaymentPendingPageState extends State<PaymentPendingPage>
  return 'Rp. ${buffer.toString().split('').reversed.join()}';
  }
 
- void _onPaymentSuccess() {
- _log(' _onPaymentSuccess dipanggil — hentikan polling & navigasi');
+ Future<void> _onPaymentSuccess() async {
+ if (_isNavigatingToSuccess) return;
+ _isNavigatingToSuccess = true;
+ _log(' _onPaymentSuccess dipanggil — verifikasi backend & navigasi jika sudah paid');
+
+ await context.read<OrderProvider>().checkPaymentStatus(widget.order.id);
+ if (!mounted) {
+ _isNavigatingToSuccess = false;
+ return;
+ }
+
+ final orderProv = context.read<OrderProvider>();
+ final updatedOrder = orderProv.lastOrder ?? widget.order;
+ final isOrderPaid = orderProv.paymentCheckStatus == PaymentCheckStatus.paid;
+
+ if (!isOrderPaid) {
+ _log(' Pembayaran sukses di wallet, tetapi status order backend masih pending. Menunggu polling.');
+ _isNavigatingToSuccess = false;
+ return;
+ }
+
  context.read<OrderProvider>().stopPaymentPolling();
+
+ if (!mounted) {
+ _isNavigatingToSuccess = false;
+ return;
+ }
 
  Navigator.pushNamedAndRemoveUntil(
  context,
  AppRouter.orderSuccess,
  (route) => route.settings.name == AppRouter.dashboard,
- arguments: context.read<OrderProvider>().lastOrder ?? widget.order,
+ arguments: updatedOrder,
  );
  }
 

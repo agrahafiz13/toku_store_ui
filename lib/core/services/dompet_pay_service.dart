@@ -98,8 +98,13 @@ class DompetPayService {
  _log(_tag, '⏩ Diabaikan — bukan skema tokustore (scheme=${uri.scheme})');
  return;
  }
- if (uri.host != 'payment-callback') {
- _log(_tag, '⏩ Diabaikan — bukan host payment-callback (host=${uri.host})');
+
+ final isCallbackHost = uri.host == 'payment-callback';
+ final isCallbackPath = uri.path == '/payment-callback';
+ final isReturnUrl = uri.host.isEmpty && uri.path.isEmpty && uri.queryParameters.containsKey('status');
+
+ if (!isCallbackHost && !isCallbackPath && !isReturnUrl) {
+ _log(_tag, '⏩ Diabaikan — bukan callback yang dikenali');
  return;
  }
 
