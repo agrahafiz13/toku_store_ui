@@ -27,7 +27,6 @@ class PaymentCallbackData {
 // ── Service ───────────────────────────────────────────────────
 
 /// Mengelola deeplink keluar ke Dompet Kampus Global
-/// dan deeplink masuk (callback pembayaran) ke Pasar Malam.
 class DompetPayService {
  static final DompetPayService _instance = DompetPayService._();
  factory DompetPayService() => _instance;
@@ -95,7 +94,6 @@ class DompetPayService {
  'path=${uri.path} params=${uri.queryParameters} | coldStart=$isColdStart',
  );
 
- // Filter: hanya proses callback Pasar Malam
  if (uri.scheme != 'tokustore') {
  _log(_tag, '⏩ Diabaikan — bukan skema tokustore (scheme=${uri.scheme})');
  return;
